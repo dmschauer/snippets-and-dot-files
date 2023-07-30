@@ -1,0 +1,44 @@
+image: "python:3.8"
+
+stages:
+  - Build
+  - Static Analysis
+  - Test
+
+variables:
+  VENV_DIR: ".venv"
+
+install:
+  stage: Build
+  script:
+    - python -m venv $VENV_DIR
+    - source $VENV_DIR/bin/activate
+    - python -m pip install --upgrade pip
+    - pip install flake8 black pytest
+  artifacts:
+    paths:
+      - $VENV_DIR  # Preserve the virtual environment for the Static Analysis stage
+
+flake8:
+  stage: Static Analysis
+  script:
+    - source $VENV_DIR/bin/activate  # Activate the virtual environment
+    - flake8 --exclude=$VENV_DIR .
+  dependencies:
+    - install  # Depend on the 'install' stage to access the virtual environment
+
+black:
+  stage: Static Analysis
+  script:
+    - source $VENV_DIR/bin/activate  # Activate the virtual environment
+    - black .
+  dependencies:
+    - install  # Depend on the 'install' stage to access the virtual environment
+
+test:
+  stage: Test
+  script:
+    - source $VENV_DIR/bin/activate  # Activate the virtual environment
+    - python -m pytest
+  dependencies:
+    - install  # Depend on the 'install' stage to access the virtual environment
